@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+.idea/
+
+# Keep the data folders
+data/video/*
+!data/video/.keep
+data/audio/*
+!data/audio/.keep
