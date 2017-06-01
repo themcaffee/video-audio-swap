@@ -2,6 +2,9 @@ from aubio import source, tempo
 from numpy import median, diff
 
 
+BEATS_DATA_FOLDER = 'data/beats/'
+
+
 def get_file_bpm(path, samplerate, win_s, hop_s):
     s = source(path, samplerate, hop_s)
     o = tempo("specdiff", win_s, hop_s, samplerate)
@@ -49,12 +52,17 @@ def get_tempo(path, samplerate, win_s, hop_s):
 
     # total number of frames read
     total_frames = 0
+    log_filename = path.rsplit('/', 1)[-1]
+    log_file = open(BEATS_DATA_FOLDER + log_filename + '.txt', 'w')
     while True:
         samples, read = s()
         is_beat = o(samples)
         if is_beat:
             this_beat = int(total_frames - delay + is_beat[0] * hop_s)
-            print("%f" % (this_beat / float(samplerate)))
+            beat_info = "%f" % (this_beat / float(samplerate))
+            log_file.write(beat_info)
+            log_file.write("\n")
+            # print(beat_info)
             beats.append(this_beat)
         total_frames += read
         if read < hop_s: break

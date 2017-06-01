@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import sys
 import youtube_dl
-import urlparse
+from urllib.parse import urlparse, parse_qs
 
 AUDIO_DATA_FOLDER = 'data/audio/'
 VIDEO_DATA_FOLDER = 'data/video/'
@@ -30,8 +30,8 @@ def video_hook(d):
 
 
 def get_youtube_id(url):
-    url_data = urlparse.urlparse(url)
-    query = urlparse.parse_qs(url_data.query)
+    url_data = urlparse(url)
+    query = parse_qs(url_data.query)
     return query["v"][0]
 
 
