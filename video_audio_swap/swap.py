@@ -2,10 +2,19 @@ from aubio import source, tempo
 from numpy import median, diff
 
 
+# Path to the folder that holds the tempo time info
 BEATS_DATA_FOLDER = 'data/beats/'
 
 
 def get_file_bpm(path, samplerate, win_s, hop_s):
+    """
+    Get the bpm of the given audio track
+    :param path: The path to the audio track
+    :param samplerate:
+    :param win_s:
+    :param hop_s:
+    :return:
+    """
     s = source(path, samplerate, hop_s)
     o = tempo("specdiff", win_s, hop_s, samplerate)
     # List of beats, in samples
@@ -40,6 +49,15 @@ def get_file_bpm(path, samplerate, win_s, hop_s):
 
 
 def get_tempo(path, samplerate, win_s, hop_s):
+    """
+    Get the current tempo of the given track and write it
+    to a file
+    :param path: Path to the audio track
+    :param samplerate:
+    :param win_s:
+    :param hop_s:
+    :return:
+    """
     s = source(path, samplerate, hop_s)
     o = tempo("default", win_s, hop_s, samplerate)
 
@@ -67,3 +85,38 @@ def get_tempo(path, samplerate, win_s, hop_s):
         total_frames += read
         if read < hop_s: break
     print(len(beats))
+
+
+def set_video_rate(path, rate=0.5):
+    """
+    Set the video speed using ffmpeg
+    :param path: The path to the video
+    :param rate: The rate to speed up / slow down the video
+    :return:
+    """
+    out_path = 'output.mp4'
+    cmd = 'ffmpeg -i {} -filter:v "setpts={}*PTS" -strict -2 {}'.format(path, str(rate), out_path)
+
+
+def set_audio_rate(path, rate=2.0):
+    """
+    Set the audio tempo of a track using ffmpeg.
+    NOTE: Currently only supports rates from 0.5 to 2.0. See https://trac.ffmpeg.org/wiki/How%20to%20speed%20up%20/%20slow%20down%20a%20video
+    :param path: The path to the audio file
+    :param rate: The rate to speed up / slow down the track
+    :return:
+    """
+    out_path = 'output.wav'
+    cmd = 'ffmpeg -i {} -filter:a "atempo={} -vn {}'.format(path, str(rate), out_path)
+
+
+def combine_video_audio(video_path, audio_path):
+    """
+    Combine the video and audio tracks
+    :param video_path: Path to the video file
+    :param audio_path: Path to the audio file
+    :return:
+    """
+    out_path = 'output.mp4'
+    cmd = 'ffmpeg -i {} -i {} -c:v copy -c:a -strict experimental {}'.format(video_path, audio_path, out_path)
+
