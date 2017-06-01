@@ -1,9 +1,19 @@
+import re
+import subprocess
+
+import datetime
 from aubio import source, tempo
 from numpy import median, diff
 
 
 # Path to the folder that holds the tempo time info
+from video_audio_swap.download import VIDEO_DATA_FOLDER
+
 BEATS_DATA_FOLDER = 'data/beats/'
+
+# Folders to save sped up / slowed down video or audio
+ADJUSTED_VIDEO_FOLDER = 'data/adjusted_video/'
+ADJUSTED_AUDIO_FOLDER = 'data/adjusted_audio/'
 
 
 def get_file_bpm(path, samplerate, win_s, hop_s):
@@ -94,8 +104,10 @@ def set_video_rate(path, rate=0.5):
     :param rate: The rate to speed up / slow down the video
     :return:
     """
-    out_path = 'output.mp4'
-    cmd = 'ffmpeg -i {} -filter:v "setpts={}*PTS" -strict -2 {}'.format(path, str(rate), out_path)
+    out_path = ADJUSTED_VIDEO_FOLDER + 'output.mp4'
+    cmd = 'ffmpeg -i {} -filter:v "setpts={}*PTS" -strict -2 {}'.format(path, str(rate), out_path).split(" ")
+    subprocess.run(cmd)
+    return out_path
 
 
 def set_audio_rate(path, rate=2.0):
@@ -106,17 +118,47 @@ def set_audio_rate(path, rate=2.0):
     :param rate: The rate to speed up / slow down the track
     :return:
     """
-    out_path = 'output.wav'
-    cmd = 'ffmpeg -i {} -filter:a "atempo={} -vn {}'.format(path, str(rate), out_path)
+    out_path = ADJUSTED_AUDIO_FOLDER + 'output.wav'
+    cmd = 'ffmpeg -i {} -filter:a "atempo={} -loglevel warning -vn {}'.format(path, str(rate), out_path).split(" ")
+    subprocess.run(cmd)
+    return out_path
 
 
-def combine_video_audio(video_path, audio_path):
+def get_track_length(path):
     """
-    Combine the video and audio tracks
+    Get an audio track length using ffmpeg
+    :param path:
+    :return:
+    """
+    process = subprocess.Popen(['ffmpeg',  '-i', path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = process.communicate()
+    matches = re.search(r"Duration:\s{1}(?P<hours>\d+?):(?P<minutes>\d+?):(?P<seconds>\d+\.\d+?),".encode('utf-8'), stdout, re.DOTALL).groupdict()
+    matches['hours'] = int(matches['hours'].decode('utf-8'))
+    matches['minutes'] = int(matches['minutes'].decode('utf-8'))
+    matches['seconds'] = int(matches['seconds'].decode('utf-8').split(".")[0])
+    return datetime.timedelta(hours=matches['hours'], minutes=matches['minutes'], seconds=matches['seconds'])
+
+
+def combine_video_audio(video_path, audio_path, output_path):
+    """
+    Replace the audio track of the video file with the given audio path
     :param video_path: Path to the video file
     :param audio_path: Path to the audio file
     :return:
     """
-    out_path = 'output.mp4'
-    cmd = 'ffmpeg -i {} -i {} -c:v copy -c:a -strict experimental {}'.format(video_path, audio_path, out_path)
+    output_path += ".mp4"
+    cmd = 'ffmpeg -i {} -i {} -c:v copy -c:a aac -loglevel warning -strict experimental -map 0:v:0 -map 1:a:0 {}'.format(video_path, audio_path, output_path).split(" ")
+    subprocess.run(cmd)
+    return output_path
 
+
+def save_audio_from_video(video_path):
+    """
+    Save the audio of a mp4 to wav
+    :param video_path: The path to the video file
+    :return:
+    """
+    out_path = VIDEO_DATA_FOLDER + 'output.wav'
+    cmd = 'ffmpeg -i {} -acodec pcm_s16le -loglevel warning -ac 2 {}'.format(video_path, out_path).split(" ")
+    subprocess.run(cmd)
+    return out_path

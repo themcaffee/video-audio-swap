@@ -109,3 +109,7 @@ data/audio/*
 !data/audio/.keep
 data/beats/*
 !data/beats/.keep
+data/adjusted_audio/*
+!data/adjusted_audio/.keep
+data/adjusted_video/*
+!data/adjusted_video/.keep

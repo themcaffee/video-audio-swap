@@ -1,10 +1,16 @@
 from __future__ import unicode_literals
 
-import sys
+import os
+from os import listdir
+
 import youtube_dl
 from urllib.parse import urlparse, parse_qs
 
+# Folder that stores the audio tracks that will be put onto videos
+from os.path import isfile, join
+
 AUDIO_DATA_FOLDER = 'data/audio/'
+# Folder that stores the data for videos to be swapped onto
 VIDEO_DATA_FOLDER = 'data/video/'
 
 
@@ -99,3 +105,31 @@ def download_video(url, options=None):
     # Parse and return the output file
     youtube_id = get_youtube_id(url)
     return VIDEO_DATA_FOLDER + youtube_id + '.mp4'
+
+
+def clear_audio_folder():
+    """
+    Clear the folder of audio tracks for this project
+    :return:
+    """
+    clear_folder(AUDIO_DATA_FOLDER)
+
+
+def clear_video_folder():
+    """
+    Clear the folder of videos for this project
+    :return:
+    """
+    clear_folder(VIDEO_DATA_FOLDER)
+
+
+def clear_folder(path):
+    """
+    Clear a folder except for .keep files
+    :return:
+    """
+    onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    for i in onlyfiles:
+        if i != '.keep':
+            os.remove(path + i)
+
