@@ -2,12 +2,14 @@ import re
 import subprocess
 
 import datetime
-from pprint import pprint
 
 from aubio import source, tempo
 from numpy import median, diff
 
 from video_audio_swap.config import ADJUSTED_AUDIO_FOLDER, ADJUSTED_VIDEO_FOLDER, VIDEO_DATA_FOLDER, BEATS_DATA_FOLDER
+
+
+FFMPEG_LOG_LEVEL = 'warning'
 
 
 def get_file_bpm(path, samplerate, win_s, hop_s):
@@ -41,14 +43,13 @@ def get_file_bpm(path, samplerate, win_s, hop_s):
     # Convert to periods and to bpm
     if len(beats) > 1:
         if len(beats) < 4:
-            print("few beats found")
+            raise Exception("few beats found")
         bpms = 60./diff(beats)
         b = median(bpms)
     else:
         b = 0
-        print("not enough beats found")
+        raise Exception("Not enough beats found")
 
-    print("{:6s} {:s}".format("{:2f}".format(b), path))
     return b
 
 
@@ -88,7 +89,7 @@ def get_tempo(path, samplerate, win_s, hop_s):
             beats.append(this_beat)
         total_frames += read
         if read < hop_s: break
-    print(len(beats))
+    return beats
 
 
 def set_video_rate(path, rate=0.5):
@@ -98,10 +99,8 @@ def set_video_rate(path, rate=0.5):
     :param rate: The rate to speed up / slow down the video
     :return:
     """
-    print('Set video rate: ' + str(rate))
     out_path = ADJUSTED_VIDEO_FOLDER + 'output.mp4'
-    cmd = 'ffmpeg -i {} -strict -2 -filter:v setpts={}*PTS {}'.format(path, str(rate), out_path).split(" ")
-    pprint(cmd)
+    cmd = 'ffmpeg -loglevel {} -y -i {} -strict -2 -filter:v setpts={}*PTS {}'.format(FFMPEG_LOG_LEVEL, path, str(rate), out_path).split(" ")
     subprocess.run(cmd)
     return out_path
 
@@ -115,7 +114,7 @@ def set_audio_rate(path, rate=2.0):
     :return:
     """
     out_path = ADJUSTED_AUDIO_FOLDER + 'output.wav'
-    cmd = 'ffmpeg -i {} -filter:a "atempo={} -loglevel warning -vn {}'.format(path, str(rate), out_path).split(" ")
+    cmd = 'ffmpeg  -loglevel {} -y -i {} -filter:a "atempo={} -vn {}'.format(FFMPEG_LOG_LEVEL, path, str(rate), out_path).split(" ")
     subprocess.run(cmd)
     return out_path
 
@@ -143,7 +142,7 @@ def combine_video_audio(video_path, audio_path, output_path):
     :return:
     """
     output_path += ".mp4"
-    cmd = 'ffmpeg -i {} -i {} -c:v copy -c:a aac -loglevel warning -strict experimental -map 0:v:0 -map 1:a:0 {}'.format(video_path, audio_path, output_path).split(" ")
+    cmd = 'ffmpeg -loglevel {} -y -i {} -i {} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 {}'.format(FFMPEG_LOG_LEVEL, video_path, audio_path, output_path).split(" ")
     subprocess.run(cmd)
     return output_path
 
@@ -155,6 +154,13 @@ def save_audio_from_video(video_path):
     :return:
     """
     out_path = VIDEO_DATA_FOLDER + 'output.wav'
-    cmd = 'ffmpeg -i {} -acodec pcm_s16le -loglevel warning -ac 2 {}'.format(video_path, out_path).split(" ")
+    cmd = 'ffmpeg -loglevel {} -y -i {} -acodec pcm_s16le -ac 2 {}'.format(FFMPEG_LOG_LEVEL, video_path, out_path).split(" ")
+    subprocess.run(cmd)
+    return out_path
+
+
+def cut_video(video_path, start, stop):
+    out_path = VIDEO_DATA_FOLDER + 'cut.mp4'
+    cmd = 'ffmpeg -loglevel {} -y -ss {} -i {} -to {} -c copy {}'.format(FFMPEG_LOG_LEVEL, start, video_path, stop, out_path).split(" ")
     subprocess.run(cmd)
     return out_path
