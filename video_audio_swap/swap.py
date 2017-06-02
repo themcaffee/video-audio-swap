@@ -2,18 +2,12 @@ import re
 import subprocess
 
 import datetime
+from pprint import pprint
+
 from aubio import source, tempo
 from numpy import median, diff
 
-
-# Path to the folder that holds the tempo time info
-from video_audio_swap.download import VIDEO_DATA_FOLDER
-
-BEATS_DATA_FOLDER = 'data/beats/'
-
-# Folders to save sped up / slowed down video or audio
-ADJUSTED_VIDEO_FOLDER = 'data/adjusted_video/'
-ADJUSTED_AUDIO_FOLDER = 'data/adjusted_audio/'
+from video_audio_swap.config import ADJUSTED_AUDIO_FOLDER, ADJUSTED_VIDEO_FOLDER, VIDEO_DATA_FOLDER, BEATS_DATA_FOLDER
 
 
 def get_file_bpm(path, samplerate, win_s, hop_s):
@@ -104,8 +98,10 @@ def set_video_rate(path, rate=0.5):
     :param rate: The rate to speed up / slow down the video
     :return:
     """
+    print('Set video rate: ' + str(rate))
     out_path = ADJUSTED_VIDEO_FOLDER + 'output.mp4'
-    cmd = 'ffmpeg -i {} -filter:v "setpts={}*PTS" -strict -2 {}'.format(path, str(rate), out_path).split(" ")
+    cmd = 'ffmpeg -i {} -strict -2 -filter:v setpts={}*PTS {}'.format(path, str(rate), out_path).split(" ")
+    pprint(cmd)
     subprocess.run(cmd)
     return out_path
 

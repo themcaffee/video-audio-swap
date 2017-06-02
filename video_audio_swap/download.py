@@ -9,9 +9,7 @@ from urllib.parse import urlparse, parse_qs
 # Folder that stores the audio tracks that will be put onto videos
 from os.path import isfile, join
 
-AUDIO_DATA_FOLDER = 'data/audio/'
-# Folder that stores the data for videos to be swapped onto
-VIDEO_DATA_FOLDER = 'data/video/'
+from video_audio_swap.config import AUDIO_DATA_FOLDER, VIDEO_DATA_FOLDER, ADJUSTED_VIDEO_FOLDER, ADJUSTED_AUDIO_FOLDER
 
 
 class MyLogger(object):
@@ -107,20 +105,11 @@ def download_video(url, options=None):
     return VIDEO_DATA_FOLDER + youtube_id + '.mp4'
 
 
-def clear_audio_folder():
-    """
-    Clear the folder of audio tracks for this project
-    :return:
-    """
+def clear_data_folders():
     clear_folder(AUDIO_DATA_FOLDER)
-
-
-def clear_video_folder():
-    """
-    Clear the folder of videos for this project
-    :return:
-    """
     clear_folder(VIDEO_DATA_FOLDER)
+    clear_folder(ADJUSTED_VIDEO_FOLDER)
+    clear_folder(ADJUSTED_AUDIO_FOLDER)
 
 
 def clear_folder(path):

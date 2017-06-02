@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 
 import argparse
-from pprint import pprint
 
-from video_audio_swap.download import download_audio, clear_audio_folder, clear_video_folder
+from video_audio_swap.download import download_audio, clear_data_folders
 from video_audio_swap.download import download_video
 from video_audio_swap.swap import get_file_bpm, get_tempo, save_audio_from_video, combine_video_audio, get_track_length, \
     set_video_rate
@@ -46,8 +45,7 @@ args = parser.parse_args()
 
 # Clear audio and video folder files if enabled
 if args.clear:
-    clear_audio_folder()
-    clear_video_folder()
+    clear_data_folders()
 
 # Download the audio and video from youtube
 if 'audio_youtube' in args:
@@ -76,7 +74,7 @@ print(str(video_length))
 bpm_ratio = audio_bpm / video_bpm
 print(bpm_ratio)
 
-set_video_rate(video_file, rate=bpm_ratio)
+adjusted_video = set_video_rate(video_file, rate=bpm_ratio)
 
-combined_path = combine_video_audio(video_file, audio_file, args.output)
+combined_path = combine_video_audio(adjusted_video, audio_file, args.output)
 print("Finished! See result at: " + combined_path)
