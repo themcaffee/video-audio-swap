@@ -60,11 +60,11 @@ if args.clear:
     clear_data_folders()
 
 # Download the audio and video from youtube
-if 'audio_youtube' in args:
+if args.audio_youtube:
     audio_file = download_audio(args.audio_youtube)
 else:
     audio_file = args.audio_file
-if 'video_youtube' in args:
+if args.video_youtube:
     video_file = download_video(args.video_youtube)
 else:
     video_file = args.video_file
